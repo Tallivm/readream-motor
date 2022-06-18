@@ -11,7 +11,8 @@ from typing import List, Tuple
 
 
 class NNModelFull(nn.Module):
-    def __init__(self, sample_shape: Tuple[int, ...], time_layer_output: int, freq_layer_output: int):
+    def __init__(self, sample_shape: Tuple[int, ...], time_layer_output: int, freq_layer_output: int,
+                 time_groups: int, freq_groups: int):
         """
         Create 4-layered NN model with one layer for temporal and another for spectral dimensions.
 
@@ -22,11 +23,11 @@ class NNModelFull(nn.Module):
         manual_seed(42)
         super().__init__()
         self.conv_time = nn.Conv3d(sample_shape[0], time_layer_output, kernel_size=(5, 5, 1),
-                                   padding=(2, 2, 0), padding_mode='zeros')
+                                   padding=(2, 2, 0), padding_mode='zeros', groups=time_groups)
         nn.init.kaiming_normal_(self.conv_time.weight)
         self.norm_time = nn.BatchNorm3d(num_features=time_layer_output)
         self.conv_freq = nn.Conv3d(sample_shape[-1], freq_layer_output, kernel_size=(5, 5, 1),
-                                   padding=(2, 2, 0), padding_mode='zeros', groups=2)
+                                   padding=(2, 2, 0), padding_mode='zeros', groups=freq_groups)
         nn.init.kaiming_normal_(self.conv_freq.weight)
         self.norm_freq = nn.BatchNorm3d(num_features=freq_layer_output)
         self.relu = nn.LeakyReLU()
@@ -58,7 +59,7 @@ class NNModelFull(nn.Module):
 
 
 class NNModelTime(nn.Module):
-    def __init__(self, sample_shape: Tuple[int, ...], time_layer_output: int):
+    def __init__(self, sample_shape: Tuple[int, ...], time_layer_output: int, groups: int):
         """
         Create 4-layered NN model with two layers for temporal dimension.
 
@@ -68,11 +69,11 @@ class NNModelTime(nn.Module):
         manual_seed(42)
         super().__init__()
         self.conv_time0 = nn.Conv2d(sample_shape[0], sample_shape[0], kernel_size=(5, 5),
-                                    padding=(2, 2), padding_mode='zeros')
+                                    padding=(2, 2), padding_mode='zeros', groups=groups)
         nn.init.kaiming_normal_(self.conv_time0.weight)
         self.norm_time0 = nn.BatchNorm2d(num_features=sample_shape[0])
         self.conv_time1 = nn.Conv2d(sample_shape[0], time_layer_output, kernel_size=(5, 5),
-                                    padding=(2, 2), padding_mode='zeros')
+                                    padding=(2, 2), padding_mode='zeros', groups=groups)
         nn.init.kaiming_normal_(self.conv_time1.weight)
         self.norm_time1 = nn.BatchNorm2d(num_features=time_layer_output)
         self.relu = nn.LeakyReLU()
@@ -103,7 +104,7 @@ class NNModelTime(nn.Module):
 
 
 class NNModelFreq(nn.Module):
-    def __init__(self, sample_shape: Tuple[int, ...], freq_layer_output: int):
+    def __init__(self, sample_shape: Tuple[int, ...], freq_layer_output: int, groups: int):
         """
         Create 4-layered NN model with two layers for temporal dimension.
 
@@ -113,11 +114,11 @@ class NNModelFreq(nn.Module):
         manual_seed(42)
         super().__init__()
         self.conv_freq0 = nn.Conv2d(sample_shape[0], sample_shape[0], kernel_size=(5, 5),
-                                    padding=(2, 2), padding_mode='zeros', groups=2)
+                                    padding=(2, 2), padding_mode='zeros', groups=groups)
         nn.init.kaiming_normal_(self.conv_freq0.weight)
         self.norm_freq0 = nn.BatchNorm2d(num_features=sample_shape[0])
         self.conv_freq1 = nn.Conv2d(sample_shape[0], freq_layer_output, kernel_size=(5, 5),
-                                    padding=(2, 2), padding_mode='zeros', groups=2)
+                                    padding=(2, 2), padding_mode='zeros', groups=groups)
         nn.init.kaiming_normal_(self.conv_freq1.weight)
         self.norm_freq1 = nn.BatchNorm2d(num_features=freq_layer_output)
         self.relu = nn.LeakyReLU()
@@ -168,7 +169,7 @@ class NNModelTrainer:
         if build_model_params["LOAD MODEL"]:
             self._load_model(build_model_params["MODEL NAME"])
         else:
-            self._build_model()
+            self._build_model(build_model_params)
         self.model = self.model.to(self.device)
         self._load_optimizer(build_model_params["OPTIMIZER"], lr=build_model_params["LEARNING RATE"],
                              weight_decay=build_model_params["WEIGHT DECAY"])
@@ -178,17 +179,20 @@ class NNModelTrainer:
         """Load a pre-trained PyTorch model."""
         self.model = torch_load(model_path)
 
-    def _build_model(self) -> None:
+    def _build_model(self, build_model_params: Dict[str, Any]) -> None:
         """Choose and build the model fit for the chosen data type."""
-        time_layer_output = 5
-        freq_layer_output = 4  # TODO: add to customizable parameters after un-hardcoding linear layer shapes
+        time_groups = build_model_params["TEMPORAL CNN GROUPS"]
+        freq_groups = build_model_params["SPECTRAL CNN GROUPS"]
+        time_layer_output = build_model_params["TEMPORAL CNN OUTPUT"]
+        freq_layer_output = build_model_params["SPECTRAL CNN OUTPUT"]
         # TODO: rewrite into config for custom data features
         if self.dataset.model_type == 'power-only':
-            self.model = NNModelFreq(self.dataset.sample_shape, freq_layer_output)
+            self.model = NNModelFreq(self.dataset.sample_shape, freq_layer_output, freq_groups)
         elif self.dataset.model_type == 'time-only':
-            self.model = NNModelTime(self.dataset.sample_shape, time_layer_output)
+            self.model = NNModelTime(self.dataset.sample_shape, time_layer_output, time_groups)
         elif self.dataset.model_type == 'time-power':
-            self.model = NNModelFull(self.dataset.sample_shape, time_layer_output, freq_layer_output)
+            self.model = NNModelFull(self.dataset.sample_shape, time_layer_output, freq_layer_output,
+                                     time_groups, freq_groups)
 
     def _load_optimizer(self, optimizer_name: str, lr: float, weight_decay: float) -> None:
         """Load optimizer for the training."""
