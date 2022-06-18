@@ -404,7 +404,7 @@ class DatasetBuilder:
             for electrode in range(fragment.shape[1]):
                 psd = signal.welch(fragment[:, electrode], nfft=self.sample_rate, fs=self.sample_rate, window='hann',
                                    nperseg=len(fragment)//4, noverlap=len(fragment)//10, detrend=False)[1]
-                frequencies = np.array([list(range(freq[0], freq[1])) for freq in self.freqs]).ravel()
+                frequencies = np.hstack([np.arange(freq[0], freq[1]) for freq in self.freqs])
                 psds.append(psd[frequencies])
             result.append(np.array(psds))
         return result
