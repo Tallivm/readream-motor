@@ -88,7 +88,11 @@
     "OPTIMIZER": "Adam",
     "LEARNING RATE": 0.5e-3,
     "WEIGHT DECAY": 0.5e-5,
-    "MULTI-LABEL": false
+    "MULTI-LABEL": false,
+    "TEMPORAL CNN GROUPS": 1,
+    "SPECTRAL CNN GROUPS": 1,
+    "TEMPORAL CNN OUTPUT": 5,
+    "SPECTRAL CNN OUTPUT": 4
   },
   "FILE STRUCTURE": {
     "MODEL DIRECTORY": "models",
