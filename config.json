@@ -1,0 +1,99 @@
+{
+  "DATA BUILDER PARAMETERS": {
+    "DATA FEATURES": "power-only",
+    "BANDS OF INTEREST": [[8, 32], [76, 100]],
+    "PERMUTE LOCATIONS": false,
+    "N CLASSES": 3,
+    "CLASS NAMES": ["rest", "hand", "tongue"],
+    "SAMPLE RATE": 1000,
+    "BRAIN FILE": "Data/right_hemisphere.npy"
+  },
+  "DATASETS": [
+    {
+      "DATASET NAME": "motor_data_bp",
+      "DATASET TYPE": "train",
+      "FILES": {
+        "DATA FILES": ["Data/imagery_basic_data/bp_im_t_h.mat"],
+        "CUE FILES": ["Data/imagery_basic_data/bp_im_t_h.mat"],
+        "ELECTRODE FILES": ["Data/imagery_basic_data/locs/bp_electrodes.mat"]
+      },
+      "FILE KEYWORDS": {
+        "data": "data",
+        "cues": "stim",
+        "locs": "electrodes"},
+      "DROP ELECTRODES": {
+        "1": [40, 48, 49, 56],
+        "4": [32, 33, 40, 48, 49, 56, 57, 58]
+      },
+      "CONVERT CLASSES": {"0": 0, "11": 1, "12": 2},
+      "FRAGMENT BY CUES": true,
+      "FRAGMENTATION PARAMETERS": {
+        "FRAGMENT LENGTH": 200,
+        "FRAGMENT OVERLAP": 100,
+        "CUED FRAGMENT START TRIM": 500
+      },
+      "SAMPLE RATE": 1000,
+      "AMPLITUDE COEFFICIENT": 1,
+      "FILTERING BEFORE FRAGMENTING": [["zero mean", {}]],
+      "FILTERING AFTER FRAGMENTING": [["CAR filter", {"filter_type":  "mean"}]]
+    },
+    {
+      "DATASET NAME": "motor_data_fp",
+      "DATASET TYPE": "test",
+      "FILES": {
+        "DATA FILES": ["Data/imagery_basic_data/fp_im_t_h.mat"],
+        "CUE FILES": ["Data/imagery_basic_data/fp_im_t_h.mat"],
+        "ELECTRODE FILES": ["Data/imagery_basic_data/locs/fp_electrodes.mat"]
+      },
+      "FILE KEYWORDS": {
+        "data": "data",
+        "cues": "stim",
+        "locs": "electrodes"},
+      "DROP ELECTRODES": {
+        "1": [40, 48, 49, 56],
+        "4": [32, 33, 40, 48, 49, 56, 57, 58]
+      },
+      "CONVERT CLASSES": {"0": 0, "11": 1, "12": 2},
+      "FRAGMENT BY CUES": true,
+      "FRAGMENTATION PARAMETERS": {
+        "FRAGMENT LENGTH": 200,
+        "FRAGMENT OVERLAP": 100,
+        "CUED FRAGMENT START TRIM": 500
+      },
+      "SAMPLE RATE": 1000,
+      "AMPLITUDE COEFFICIENT": 1,
+      "FILTERING BEFORE FRAGMENTING": [["zero mean", {}]],
+      "FILTERING AFTER FRAGMENTING": [["CAR filter", {"filter_type":  "mean"}]]
+    }
+  ],
+  "BATCH PARAMETERS": {
+    "BATCH SIZE": 16,
+    "TEST RATIO": 0.1
+  },
+  "SPATIAL TRANSFORM PARAMETERS": {
+    "SET DELTA": 5.12,
+    "TEMPORAL RESAMPLE TO": 100,
+    "SPECTRAL RESAMPLE TO": 12,
+    "GAUSSIAN BLUR POWER": 1.5
+  },
+  "TRAIN PARAMETERS": {
+    "N EPOCHS": 1,
+    "TEST AFTER N EPOCH": 1,
+    "SAVE MODEL": true,
+    "SAVE PATH": "model.pth"
+  },
+  "MODEL BUILD": {
+    "LOAD MODEL": false,
+    "MODEL NAME": "",
+    "OPTIMIZER": "Adam",
+    "LEARNING RATE": 0.5e-3,
+    "WEIGHT DECAY": 0.5e-5,
+    "MULTI-LABEL": false
+  },
+  "FILE STRUCTURE": {
+    "MODEL DIRECTORY": "models",
+    "LOSS PLOTS DIRECTORY": "loss_plots",
+    "CONFUSION MATRICES DIRECTORY": "conf_matrices",
+    "LOGS DIRECTORY": "logs"
+  }
+}
